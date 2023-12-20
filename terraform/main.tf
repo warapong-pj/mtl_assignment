@@ -76,13 +76,6 @@ module "s3" {
   bucket = "my-web-assets"
 }
 
-module "sqs" {
-  source  = "terraform-aws-modules/sqs/aws"
-  version = "4.1.0"
-
-  name = "lms-import-data"
-}
-
 module "iam_s3_policy" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
   version = "5.33.0"
@@ -106,47 +99,4 @@ module "iam_s3_policy" {
 	]
 }
 EOF
-}
-
-module "iam_sqs_policy" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
-  version = "5.33.0"
-
-  name        = "eks-access-to-sqs"
-  path        = "/"
-
-  policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "VisualEditor0",
-			"Effect": "Allow",
-			"Action": [
-				"sqs:ReceiveMessage",
-				"sqs:DeleteQueue",
-				"sqs:SendMessage"
-			],
-			"Resource": "arn:aws:sqs:ap-southeast-1:XXXXXXXXXXXX:lms-import-data"
-		}
-	]
-}
-EOF
-}
-
-module "eks_roles" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
-  version = "5.33.0"
-
-  create_role = true
-
-  role_name = "demo-cluster-roles"
-
-  provider_url = module.eks.oidc_provider
-
-  role_policy_arns = [
-    module.iam_s3_policy.arn,
-    module.iam_sqs_policy.arn
-  ]
-  number_of_role_policy_arns = 2
 }
