@@ -134,3 +134,20 @@ module "iam_sqs_policy" {
 }
 EOF
 }
+
+module "eks_roles" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+  version = "5.33.0"
+
+  create_role = true
+
+  role_name = "demo-cluster-roles"
+
+  provider_url = module.eks.oidc_provider
+
+  role_policy_arns = [
+    module.iam_s3_policy.arn,
+    module.iam_sqs_policy.arn
+  ]
+  number_of_role_policy_arns = 2
+}
