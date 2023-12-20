@@ -1,0 +1,34 @@
+crds:
+  # -- Keep CRDs on chart uninstall
+  keep: false
+
+## Server
+server:
+  extensions:
+    # -- Enable support for Argo UI extensions
+    enabled: true
+  metrics:
+    enabled: true
+    service:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8083"
+
+controller:
+  metrics:
+    enabled: true
+    service:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8082"
+
+repoServer:
+  metrics:
+    enabled: true
+    service:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8084"
