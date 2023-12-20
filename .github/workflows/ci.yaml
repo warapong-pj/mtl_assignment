@@ -1,0 +1,22 @@
+name: CI pipeline
+
+on:
+  push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [ '1.21.x' ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/build-push-action@v5
+        with:
+          file: src/warapong-pj/mtl_assignment/Dockerfile
+          push: true
+          tags: warapongpj/app:latest

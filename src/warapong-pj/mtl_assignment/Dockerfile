@@ -1,7 +1,7 @@
 FROM golang:1.21.3-alpine3.18 AS build
 
 WORKDIR /root
-COPY . /root
+COPY src/warapong-pj/mtl_assignment/ /root
 RUN go build
 
 FROM alpine:3.18.5
