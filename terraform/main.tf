@@ -2,8 +2,54 @@ variable "region" {
   default = "ap-southeast-1"
 }
 
+variable "region" {
+  default = "ap-southeast-1"
+}
+
+variable "vpc_name" {
+  default = "vpc"
+}
+
+variable "cidr" {
+  default = "10.0.0.0/16"
+}
+
+variable "az" {
+  default = ["ap-southeast-1a", "ap-southeast-1b", "ap-southeast-1c"]
+}
+
+variable "public_subnets" {
+  default = ["10.0.0.0/24", "10.0.1.0/24", "10.0.2.0/24"]
+}
+
+variable "private_subnets" {
+  default = ["10.0.3.0/24", "10.0.4.0/24", "10.0.5.0/24"]
+}
+
 provider "aws" {
   region = var.region
+}
+
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.4.0"
+
+  name = var.vpc_name
+  cidr = var.cidr
+
+  azs             = var.az
+  private_subnets = var.private_subnets
+  public_subnets  = var.public_subnets
+
+  enable_nat_gateway  = true
+  map_public_ip_on_launch = true
+}
+
+module "s3" {
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "3.15.1"
+
+  bucket = "my-web-assets"
 }
 
 provider "kubernetes" {
@@ -38,12 +84,8 @@ module "eks" {
   }
   create_cloudwatch_log_group = false
 
-  vpc_id = "vpc-01e578fe189e6ebf3"
-  subnet_ids = [
-    "subnet-0921cbf30320d0be5",
-    "subnet-0aafa3b6eb8728b76",
-    "subnet-04b7f0d706e02e9b3"
-  ]
+  vpc_id = module.vpc.default_vpc_id
+  subnet_ids = module.vpc.public_subnets
 
   create_aws_auth_configmap = false
   manage_aws_auth_configmap = true
@@ -69,85 +111,85 @@ module "eks" {
   }
 }
 
-module "s3" {
-  source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "3.15.1"
+# module "s3" {
+#   source  = "terraform-aws-modules/s3-bucket/aws"
+#   version = "3.15.1"
 
-  bucket = "my-web-assets"
-}
+#   bucket = "my-web-assets"
+# }
 
-module "iam_s3_policy" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
-  version = "5.33.0"
+# module "iam_s3_policy" {
+#   source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
+#   version = "5.33.0"
 
-  name        = "eks-access-to-s3"
-  path        = "/"
+#   name        = "eks-access-to-s3"
+#   path        = "/"
 
-  policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "VisualEditor0",
-			"Effect": "Allow",
-			"Action": [
-				"s3:PutObject",
-				"s3:GetObject"
-			],
-			"Resource": "arn:aws:s3:::my-web-assets/*"
-		}
-	]
-}
-EOF
-}
+#   policy = <<EOF
+# {
+# 	"Version": "2012-10-17",
+# 	"Statement": [
+# 		{
+# 			"Sid": "VisualEditor0",
+# 			"Effect": "Allow",
+# 			"Action": [
+# 				"s3:PutObject",
+# 				"s3:GetObject"
+# 			],
+# 			"Resource": "arn:aws:s3:::my-web-assets/*"
+# 		}
+# 	]
+# }
+# EOF
+# }
 
 
-module "sqs" {
-  source  = "terraform-aws-modules/sqs/aws"
-  version = "4.1.0"
+# module "sqs" {
+#   source  = "terraform-aws-modules/sqs/aws"
+#   version = "4.1.0"
 
-  name = "lms-import-data"
-}
+#   name = "lms-import-data"
+# }
 
-module "iam_sqs_policy" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
-  version = "5.33.0"
+# module "iam_sqs_policy" {
+#   source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
+#   version = "5.33.0"
 
-  name        = "eks-access-to-sqs"
-  path        = "/"
+#   name        = "eks-access-to-sqs"
+#   path        = "/"
 
-  policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "VisualEditor0",
-			"Effect": "Allow",
-			"Action": [
-				"sqs:ReceiveMessage",
-				"sqs:DeleteQueue",
-				"sqs:SendMessage"
-			],
-			"Resource": "arn:aws:sqs:ap-southeast-1:XXXXXXXXXXXX:lms-import-data"
-		}
-	]
-}
-EOF
-}
+#   policy = <<EOF
+# {
+# 	"Version": "2012-10-17",
+# 	"Statement": [
+# 		{
+# 			"Sid": "VisualEditor0",
+# 			"Effect": "Allow",
+# 			"Action": [
+# 				"sqs:ReceiveMessage",
+# 				"sqs:DeleteQueue",
+# 				"sqs:SendMessage"
+# 			],
+# 			"Resource": "arn:aws:sqs:ap-southeast-1:XXXXXXXXXXXX:lms-import-data"
+# 		}
+# 	]
+# }
+# EOF
+# }
 
-module "eks_roles" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
-  version = "5.33.0"
+# module "eks_roles" {
+#   source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+#   version = "5.33.0"
 
-  create_role = true
+#   create_role = true
 
-  role_name = "demo-cluster-roles"
+#   role_name = "demo-cluster-roles"
 
-  provider_url = module.eks.oidc_provider
+#   provider_url = module.eks.oidc_provider
 
-  role_policy_arns = [
-    module.iam_s3_policy.arn,
-    module.iam_sqs_policy.arn
-  ]
-  number_of_role_policy_arns = 2
-}
+#   role_policy_arns = [
+#     module.iam_s3_policy.arn,
+#     module.iam_sqs_policy.arn
+#   ]
+#   number_of_role_policy_arns = 2
+# }
