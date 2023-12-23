@@ -41,7 +41,7 @@ module "vpc" {
   private_subnets = var.private_subnets
   public_subnets  = var.public_subnets
 
-  enable_nat_gateway  = true
+  enable_nat_gateway      = true
   map_public_ip_on_launch = true
 }
 
@@ -68,8 +68,8 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "19.21.0"
 
-  cluster_name    = "demo-cluster"
-  cluster_version = "1.28"
+  cluster_name                   = "demo-cluster"
+  cluster_version                = "1.28"
   cluster_endpoint_public_access = true
   cluster_addons = {
     coredns = {
@@ -84,7 +84,7 @@ module "eks" {
   }
   create_cloudwatch_log_group = false
 
-  vpc_id = module.vpc.default_vpc_id
+  vpc_id     = module.vpc.default_vpc_id
   subnet_ids = module.vpc.public_subnets
 
   create_aws_auth_configmap = false
@@ -111,85 +111,85 @@ module "eks" {
   }
 }
 
-# module "s3" {
-#   source  = "terraform-aws-modules/s3-bucket/aws"
-#   version = "3.15.1"
+module "s3" {
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "3.15.1"
 
-#   bucket = "my-web-assets"
-# }
+  bucket = "my-web-assets"
+}
 
-# module "iam_s3_policy" {
-#   source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
-#   version = "5.33.0"
+module "iam_s3_policy" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
+  version = "5.33.0"
 
-#   name        = "eks-access-to-s3"
-#   path        = "/"
+  name = "eks-access-to-s3"
+  path = "/"
 
-#   policy = <<EOF
-# {
-# 	"Version": "2012-10-17",
-# 	"Statement": [
-# 		{
-# 			"Sid": "VisualEditor0",
-# 			"Effect": "Allow",
-# 			"Action": [
-# 				"s3:PutObject",
-# 				"s3:GetObject"
-# 			],
-# 			"Resource": "arn:aws:s3:::my-web-assets/*"
-# 		}
-# 	]
-# }
-# EOF
-# }
+  policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "VisualEditor0",
+			"Effect": "Allow",
+			"Action": [
+				"s3:PutObject",
+				"s3:GetObject"
+			],
+			"Resource": "arn:aws:s3:::my-web-assets/*"
+		}
+	]
+}
+EOF
+}
 
 
-# module "sqs" {
-#   source  = "terraform-aws-modules/sqs/aws"
-#   version = "4.1.0"
+module "sqs" {
+  source  = "terraform-aws-modules/sqs/aws"
+  version = "4.1.0"
 
-#   name = "lms-import-data"
-# }
+  name = "lms-import-data"
+}
 
-# module "iam_sqs_policy" {
-#   source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
-#   version = "5.33.0"
+module "iam_sqs_policy" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
+  version = "5.33.0"
 
-#   name        = "eks-access-to-sqs"
-#   path        = "/"
+  name = "eks-access-to-sqs"
+  path = "/"
 
-#   policy = <<EOF
-# {
-# 	"Version": "2012-10-17",
-# 	"Statement": [
-# 		{
-# 			"Sid": "VisualEditor0",
-# 			"Effect": "Allow",
-# 			"Action": [
-# 				"sqs:ReceiveMessage",
-# 				"sqs:DeleteQueue",
-# 				"sqs:SendMessage"
-# 			],
-# 			"Resource": "arn:aws:sqs:ap-southeast-1:XXXXXXXXXXXX:lms-import-data"
-# 		}
-# 	]
-# }
-# EOF
-# }
+  policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "VisualEditor0",
+			"Effect": "Allow",
+			"Action": [
+				"sqs:ReceiveMessage",
+				"sqs:DeleteQueue",
+				"sqs:SendMessage"
+			],
+			"Resource": "arn:aws:sqs:ap-southeast-1:XXXXXXXXXXXX:lms-import-data"
+		}
+	]
+}
+EOF
+}
 
-# module "eks_roles" {
-#   source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
-#   version = "5.33.0"
+module "eks_roles" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+  version = "5.33.0"
 
-#   create_role = true
+  create_role = true
 
-#   role_name = "demo-cluster-roles"
+  role_name = "demo-cluster-roles"
 
-#   provider_url = module.eks.oidc_provider
+  provider_url = module.eks.oidc_provider
 
-#   role_policy_arns = [
-#     module.iam_s3_policy.arn,
-#     module.iam_sqs_policy.arn
-#   ]
-#   number_of_role_policy_arns = 2
-# }
+  role_policy_arns = [
+    module.iam_s3_policy.arn,
+    module.iam_sqs_policy.arn
+  ]
+  number_of_role_policy_arns = 2
+}
